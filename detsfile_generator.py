@@ -54,7 +54,7 @@ def generate_text_file(filename, selected_detector_list):
     selected_number_of_dets = len(selected_detector_list)
     assumed_mission_duration_yr = 1.
     scaling_factor = np.sqrt(assumed_mission_duration_yr/3. * selected_number_of_dets/total_number_of_dets)
-    with open(filename, "w") as file:
+    with open(base_path+"/"+filename, "w") as file:
         file.write(header)
         for detector in selected_detector_list:
             scaled_net = np.round(detector.net_ukrts * scaling_factor, 2)
@@ -136,6 +136,9 @@ channel       = input(">>> ")
 
 print("Do you make a detector list file? [y/n]")
 ans = ask_yes_or_no()
+if ans == "y":
+    print("Specify the directory to save: ")
+    base_path = input(">>> ")
 
 
 channel_info  = lbs.FreqChannelInfo.from_imo(
@@ -151,7 +154,6 @@ for detector_name in channel_info.detector_names:
 		)
 	)
 total_number_of_dets = len(total_detector_list)
-print("Number of dets: ", total_number_of_dets)
 
 selected_detector_list = []
 X   = np.zeros(len(total_detector_list))
