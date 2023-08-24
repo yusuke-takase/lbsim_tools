@@ -12,4 +12,9 @@ After installing the litebird_sim
 - function
     - deconvolution
         - This function provide the deconvolution for the map which is convolved by a Gaussian beam. The [usage](./notebooks/deconv_verification.ipynb) is availble with the verification of the function. 
+
+## generate_foregrounds.py
+- Save foreground maps by using litebird_sim 
+## lbs2fgbuster.py
+- genarate a table which is used for FGBuster inout by using the litebird_sim imo. 
  
