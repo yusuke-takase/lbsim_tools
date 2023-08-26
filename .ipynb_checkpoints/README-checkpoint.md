@@ -13,6 +13,20 @@ $ (lbs_env)$ python install -e .
     - This function provide the deconvolution for the map which is convolved by a Gaussian beam. The [usage](./notebooks/deconv_verification.ipynb) is availble with the verification of the function. 
 - `get_fgbuster_instrument_from_imo(imo_version)`
     - This function genarates a table which is used for FGBuster by using the litebird_sim imo. 
+- `c2d(cl, ell_start=2.)`
+    - Convert $C_\ell$ to $D_\ell$.
+- `get_planck_cmap()`
+    - Generate planck color scheme.
+        ```
+        # Usage
+        import lbsim_tools as lt
+        import healpy as hp
+        import numpy as np
+        m    = np.arange(hp.nside2npix(32))
+        cmap = lt.get_planck_cmap()
+        hp.mollview(m, cmap=cmap)
+        ```
+
 
 ## Scripts 
 The python files which are included in [script](./script) is executable from your terminal.

@@ -1,6 +1,10 @@
+import os 
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import litebird_sim as lbs
+import healpy as hp
+from matplotlib.colors import ListedColormap
 
 def get_fgbuster_instrument_from_imo(imo_version="v1.3"):
     """
@@ -101,3 +105,31 @@ def deconvolution(maps, fwhm, cut_off=191):
             alm_deconv[idx1:idx2+1] = alm[idx1:idx2+1] / bl[m:lmax+1]
         
     return hp.alm2map(alm_deconv, nside)
+
+
+def get_planck_cmap():
+    datautils_dir = Path(__file__).parent / "datautils"
+    print("datautils_dir: ", datautils_dir)
+    color_data = np.loadtxt(datautils_dir / "Planck_Parchment_RGB.txt")
+    colombi1_cmap = ListedColormap(color_data/255.)
+    colombi1_cmap.set_bad("gray")
+    colombi1_cmap.set_under("white")
+    planck_cmap = colombi1_cmap
+    return planck_cmap
+
+def c2d(cl, ell_start=2.):
+    """ The function to convert C_ell to D_ell
+    
+    Parameters
+    ----------
+    cl: 1d-array
+        Power spectrum
+    ell_start:float (default = 2.)
+        The multi-pole ell value of first index of the `cl`.
+        
+    Return
+    ------
+    dl: 1d-array
+    """
+    ell = np.arange(ell_start, len(cl)+ell_start)
+    return cl*ell*(ell+1.)/(2.*np.pi)
