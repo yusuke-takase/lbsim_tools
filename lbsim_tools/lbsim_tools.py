@@ -106,7 +106,6 @@ def deconvolution(maps, fwhm, cut_off=191):
         
     return hp.alm2map(alm_deconv, nside)
 
-
 def get_planck_cmap():
     datautils_dir = Path(__file__).parent / "datautils"
     color_data = np.loadtxt(datautils_dir / "Planck_Parchment_RGB.txt")
@@ -167,7 +166,6 @@ def read_fiducial_cl(r=0):
     if int(r) == 1:
         cl            = hp.read_cl(datautils_dir / "Cls_Planck2018_for_PTEP_2020_tensor_r1.fits")
     return cl
-
 
 def forecast(lmax, cl_sys, rmin=1e-8, rmax=1e-1, rresol=1e5, iter=0, verbose=False, test=False, bias=1e-5):
     """ The function to estimate the bias of tensor-to-scalar ratio.
