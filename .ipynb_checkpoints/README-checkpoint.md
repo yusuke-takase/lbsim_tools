@@ -26,6 +26,15 @@ $ (lbs_env)$ python install -e .
         cmap = lt.get_planck_cmap()
         hp.mollview(m, cmap=cmap)
         ```
+- `read_fiducial_cl(r)`
+    - This function reads the power spectrum of the CMB used in the map base simulation of litebird_sim. 
+    It refers to the power spectrum calculated with the specified tensor-to-scalar ratio, $r$ by setting the argument `r` to `r=0` or `r=1`.
+- `forecast(lmax, cl_sys, rmin=1e-8, rmax=1e-1, rresol=1e5, iter=0, verbose=False, test=False, bias=1e-5)`
+    - This function estimates the tensor scalar ratio from the power spectrum using the likelihood function used in [PTEP: P88, Sec. (5.3.2)](https://academic.oup.com/ptep/article/2023/4/042F01/6835420). 
+    In doing so, it excludes multipoles above the $\ell$ specified by the argument `lmax`. Enter the $B$-mode power spectrum of the systematic error in the argument `cl_sys` (The unit of it must be $\mu K_{CMB}^2$). 
+    For example, the power spectrum of the map obtained from the difference between the input map and the output map including systematic effects i.e. residual map corresponds to this.
+    
+
 
 
 ## Scripts 

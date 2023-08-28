@@ -151,10 +151,20 @@ def d2c(dl, ell_start=2.):
     return dl*(2.*np.pi)/(ell*(ell+1.))
 
 def read_fiducial_cl(r=0):
+    """ This function reads the power spectrum of the CMB used in the map base simulation of litebird_sim. 
+    
+    Parameter
+    ---------
+    r: int
+    
+    Return
+    ------
+    cl: 2d-arrays
+    """
     datautils_dir = Path(lbs.__file__).parent / "datautils"
-    if r == 0:
+    if int(r) == 0:
         cl            = hp.read_cl(datautils_dir / "Cls_Planck2018_for_PTEP_2020_r0.fits")
-    if r == 1:
+    if int(r) == 1:
         cl            = hp.read_cl(datautils_dir / "Cls_Planck2018_for_PTEP_2020_tensor_r1.fits")
     return cl
 
