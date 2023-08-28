@@ -6,7 +6,7 @@ If you haven't installed the litebird_sim you must install it before installing 
 ```
 $ git clone https://github.com/yusuke-takase/lbsim_tools.git
 $ cd lbsim_tools
-$ (lbs_env)$pip install -e .
+(lbs_env)$ pip install -e .
 ```
 ## API
 - `deconvolution(maps, fwhm, cut_off)`
