@@ -106,6 +106,78 @@ def deconvolution(maps, fwhm, cut_off=191):
         
     return hp.alm2map(alm_deconv, nside)
 
+
+def _trancation(alm, nside_in, nside_out):
+    lmax_out = 3*nside_out-1
+    lmax_in = 3*nside_in-1
+    size_out = hp.Alm.getsize(lmax_out)
+    alm_new = np.zeros((3,size_out), dtype=alm.dtype)
+    for m in range(lmax_out+1):
+        idx_start_out = hp.Alm.getidx(lmax_out, m, m)
+        idx_stop_out = hp.Alm.getidx(lmax_out, lmax_out, m)
+        idx_start_in = hp.Alm.getidx(lmax_in, m, m)
+        idx_stop_in = hp.Alm.getidx(lmax_in, lmax_out, m)
+        alm_new[0,idx_start_out:idx_stop_out+1] = alm[0,idx_start_in:idx_stop_in+1]
+        alm_new[1,idx_start_out:idx_stop_out+1] = alm[1,idx_start_in:idx_stop_in+1]
+        alm_new[2,idx_start_out:idx_stop_out+1] = alm[2,idx_start_in:idx_stop_in+1]
+    return alm_new
+
+def deconvolution_trancation(maps, fwhm, nside=64):
+    """
+    Deconvolve a set of input maps using a Gaussian beam.
+
+    This function takes input maps, a Full Width at Half Maximum (FWHM) value
+    for the Gaussian beam, and an optional cut-off multipole value. It performs
+    deconvolution on the input maps using the specified Gaussian beam, up to the
+    given cut-off multipole if provided.
+
+    Parameters:
+    -----------
+        maps (array-like)      : Input maps to be deconvolved. If maps.shape is (3, npix),
+                                 it's assumed to be a set of polarized maps for each Stokes parameter.
+                                 Otherwise, it's assumed to be an temperature map.
+        fwhm (float)           : Full Width at Half Maximum (FWHM) value of the Gaussian beam in radians.
+        cut_off (int, optional): Cut-off multipole value. Multipole values above this cut-off
+                                 will not be deconvolved. Default is 191 which was used in PTEP in the likelihood function.
+        nside                  : The nside for the output map. 
+
+    Returns:
+    --------
+        array-like             : Deconvolved maps after applying the Gaussian beam correction.
+                                 The shape of the output maps will match the shape of the input maps.
+
+    Note:
+    -----
+        The function internally uses the HEALPix library for spherical harmonic transformations.
+    """
+    nside_in = hp.get_nside(maps)
+    npix     = hp.nside2npix(nside_in)
+    lmax     = 3*nside_in - 1
+    alm      = hp.map2alm(maps, use_weights=True)
+    cut_off  = 3 * nside - 1
+    if maps.shape == (3, npix):
+        bl         = hp.gauss_beam(fwhm=fwhm,lmax=lmax,pol=True)
+        alm_deconv = np.zeros(alm.shape, dtype=complex)
+        for m in range(lmax+1):
+            for i in range(lmax-m+1):
+                l = i + m
+                if l <= cut_off:
+                    idx = hp.Alm.getidx(lmax, l, m)
+                    for stokes in range(3):
+                        alm_deconv[stokes, idx] = alm[stokes,idx]/bl[l,stokes]
+                else: 
+                    for stokes in range(3):
+                        alm_deconv[stokes, idx] = 0.0
+    else:
+        bl         = hp.gauss_beam(fwhm=fwhm,lmax=lmax,pol=False)
+        alm_deconv = np.zeros(len(alm), dtype=complex)
+        for m in range(lmax+1):
+            idx1 = hp.Alm.getidx(lmax, m, m)
+            idx2 = hp.Alm.getidx(lmax, lmax, m)
+            alm_deconv[idx1:idx2+1] = alm[idx1:idx2+1] / bl[m:lmax+1]
+    alm_deconv = _trancation(alm_deconv, nside_in, nside)
+    return hp.alm2map(alm_deconv, nside)
+
 def get_planck_cmap():
     datautils_dir = Path(__file__).parent / "datautils"
     color_data = np.loadtxt(datautils_dir / "Planck_Parchment_RGB.txt")
