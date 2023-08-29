@@ -16,7 +16,6 @@ lbsim_tools/__pycache__/__init__.cpython-39.pyc
 lbsim_tools/__pycache__/lbsim_tools.cpython-39.pyc
 lbsim_tools/datautils/Planck_Parchment_RGB.txt
 notebooks/deconv_verification.ipynb
-notebooks/simple_model_spectrum.npz
 notebooks/.ipynb_checkpoints/deconv_verification-checkpoint.ipynb
 script/detsfile_generator.py
 script/generate_foregrounds.py

@@ -107,7 +107,7 @@ def deconvolution(maps, fwhm, cut_off=191):
     return hp.alm2map(alm_deconv, nside)
 
 
-def _trancation(alm, nside_in, nside_out):
+def _truncation(alm, nside_in, nside_out):
     lmax_out = 3*nside_out-1
     lmax_in = 3*nside_in-1
     size_out = hp.Alm.getsize(lmax_out)
@@ -122,7 +122,7 @@ def _trancation(alm, nside_in, nside_out):
         alm_new[2,idx_start_out:idx_stop_out+1] = alm[2,idx_start_in:idx_stop_in+1]
     return alm_new
 
-def deconvolution_trancation(maps, fwhm, nside=64):
+def deconvolution_truncation(maps, fwhm, nside=64):
     """
     Deconvolve a set of input maps using a Gaussian beam.
 
@@ -175,7 +175,7 @@ def deconvolution_trancation(maps, fwhm, nside=64):
             idx1 = hp.Alm.getidx(lmax, m, m)
             idx2 = hp.Alm.getidx(lmax, lmax, m)
             alm_deconv[idx1:idx2+1] = alm[idx1:idx2+1] / bl[m:lmax+1]
-    alm_deconv = _trancation(alm_deconv, nside_in, nside)
+    alm_deconv = _truncation(alm_deconv, nside_in, nside)
     return hp.alm2map(alm_deconv, nside)
 
 def get_planck_cmap():
