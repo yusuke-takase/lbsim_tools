@@ -9,8 +9,14 @@ $ cd lbsim_tools
 $ (lbs_env)$ pip install -e .
 ```
 ## API
-- `deconvolution(maps, fwhm, cut_off)`
-    - This function provide the deconvolution for the map which is convolved by a Gaussian beam. The [usage](./notebooks/deconv_verification.ipynb) is availble with the verification of the function. 
+- `deconvolution(maps, fwhm, nside)`
+    - This function provide the deconvolution for the map which is convolved by a Gaussian beam. The deconvolution performs specified $\ell$ region which is decided by `lmax=3*nside-1`. After the deconvolution the decomvolved map will be down-graded to specified `nside`. The [usage](./notebooks/deconv_verification.ipynb) is availble with the verification of the function. 
+- `deconvolution_cutoff(maps, fwhm, cut_off=191)`
+    - Deconvolution in the range of ell up to the specified `cut_off`. The [usage](./notebooks/deconv_verification.ipynb) is availble with the verification of the function. 
+- `almspace_ud_grade(maps, nside)`
+    - Truncate multipoles in alm space and up/down grade to the specified `nside` map. The up-grade is not recommended.
+- `truncate_alm(alm, nside_in, nside_out)`
+    - Truncates alm to the size of the alm of the specified `nside_out`. `nside_in` is the nside of the original map of the alm to be entered.
 - `get_fgbuster_instrument_from_imo(imo_version)`
     - This function genarates a table which is used for FGBuster by using the litebird_sim imo. 
 - `c2d(cl, ell_start=2.)`

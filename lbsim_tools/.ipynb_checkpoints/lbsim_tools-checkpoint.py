@@ -52,7 +52,7 @@ def get_fgbuster_instrument_from_imo(imo_version="v1.3"):
     #instrument = instrument.sort_values('frequency')
     return instrument
 
-def deconvolution(maps, fwhm, cut_off=191):
+def deconvolution_cutoff(maps, fwhm, cut_off=191):
     """
     Deconvolve a set of input maps using a Gaussian beam.
 
@@ -82,7 +82,7 @@ def deconvolution(maps, fwhm, cut_off=191):
     nside = hp.get_nside(maps)
     npix  = hp.nside2npix(nside)
     lmax  = 3*nside - 1
-    alm   = hp.map2alm(maps, use_weights=True)
+    alm   = hp.map2alm(maps, use_pixel_weights=True)
     if maps.shape == (3, npix):
         bl         = hp.gauss_beam(fwhm=fwhm,lmax=lmax,pol=True)
         alm_deconv = np.zeros(alm.shape, dtype=complex)
@@ -107,7 +107,7 @@ def deconvolution(maps, fwhm, cut_off=191):
     return hp.alm2map(alm_deconv, nside)
 
 
-def _truncation(alm, nside_in, nside_out):
+def truncate_alm(alm, nside_in, nside_out):
     lmax_out = 3*nside_out-1
     lmax_in = 3*nside_in-1
     size_out = hp.Alm.getsize(lmax_out)
@@ -122,24 +122,21 @@ def _truncation(alm, nside_in, nside_out):
         alm_new[2,idx_start_out:idx_stop_out+1] = alm[2,idx_start_in:idx_stop_in+1]
     return alm_new
 
-def deconvolution_truncation(maps, fwhm, nside=64):
-    """
-    Deconvolve a set of input maps using a Gaussian beam.
+def deconvolution(maps, fwhm, nside=64):
+    """ This function deeconvolves the input maps using a Gaussian beam which has Full Width Half Maximum (FWHM).
 
-    This function takes input maps, a Full Width at Half Maximum (FWHM) value
-    for the Gaussian beam, and an optional cut-off multipole value. It performs
-    deconvolution on the input maps using the specified Gaussian beam, up to the
-    given cut-off multipole if provided.
+    Dividing alm by the transfer function of the beam i.e. deconvolution is 
+    done up to lmax, which is determined by the specified nside as an argument. 
+    After deconvolution, the zero-filled alm is truncated to the size of 
+    the specified nside and converted to a map.
 
     Parameters:
     -----------
-        maps (array-like)      : Input maps to be deconvolved. If maps.shape is (3, npix),
+        maps  (array-like)     : Input maps to be deconvolved. If maps.shape is (3, npix),
                                  it's assumed to be a set of polarized maps for each Stokes parameter.
                                  Otherwise, it's assumed to be an temperature map.
-        fwhm (float)           : Full Width at Half Maximum (FWHM) value of the Gaussian beam in radians.
-        cut_off (int, optional): Cut-off multipole value. Multipole values above this cut-off
-                                 will not be deconvolved. Default is 191 which was used in PTEP in the likelihood function.
-        nside                  : The nside for the output map. 
+        fwhm  (float)          : Full Width at Half Maximum (FWHM) value of the Gaussian beam in radians.
+        nside (int)            : The nside of the output map. 
 
     Returns:
     --------
@@ -153,7 +150,7 @@ def deconvolution_truncation(maps, fwhm, nside=64):
     nside_in = hp.get_nside(maps)
     npix     = hp.nside2npix(nside_in)
     lmax     = 3*nside_in - 1
-    alm      = hp.map2alm(maps, use_weights=True)
+    alm      = hp.map2alm(maps, use_pixel_weights=True)
     cut_off  = 3 * nside - 1
     if maps.shape == (3, npix):
         bl         = hp.gauss_beam(fwhm=fwhm,lmax=lmax,pol=True)
@@ -175,10 +172,30 @@ def deconvolution_truncation(maps, fwhm, nside=64):
             idx1 = hp.Alm.getidx(lmax, m, m)
             idx2 = hp.Alm.getidx(lmax, lmax, m)
             alm_deconv[idx1:idx2+1] = alm[idx1:idx2+1] / bl[m:lmax+1]
-    alm_deconv = _truncation(alm_deconv, nside_in, nside)
+    alm_deconv = truncate_alm(alm_deconv, nside_in, nside)
     return hp.alm2map(alm_deconv, nside)
 
+def almspace_ud_grade(maps, nside):
+    """ This function provides up/down grade for given map. (up grade is not recommended)
+    
+    Parameters
+    ----------
+        maps  (array-like) : Input maps to be deconvolved. If maps.shape is (3, npix),
+                             it's assumed to be a set of polarized maps for each Stokes parameter.
+                             Otherwise, it's assumed to be an temperature map.
+        nside (int)        : The nside of output map.
+    
+    Return
+    ------
+        Healpix-map: (array-like)
+    """
+    nside_in = hp.get_nside(maps)
+    alm      = hp.map2alm(maps, use_pixel_weights=True)
+    alm      = truncate_alm(alm, nside_in, nside) 
+    return hp.alm2map(alm, nside)
+
 def get_planck_cmap():
+    """ This function generates color scheme which is often used Planck paper. """
     datautils_dir = Path(__file__).parent / "datautils"
     color_data = np.loadtxt(datautils_dir / "Planck_Parchment_RGB.txt")
     colombi1_cmap = ListedColormap(color_data/255.)
@@ -192,14 +209,14 @@ def c2d(cl, ell_start=2.):
     
     Parameters
     ----------
-    cl: 1d-array
-        Power spectrum
-    ell_start:float (default = 2.)
-        The multi-pole ell value of first index of the `cl`.
+        cl: 1d-array
+            Power spectrum
+        ell_start:float (default = 2.)
+            The multi-pole ell value of first index of the `cl`.
         
     Return
     ------
-    dl: 1d-array
+        dl: 1d-array
     """
     ell = np.arange(ell_start, len(cl)+ell_start)
     return cl*ell*(ell+1.)/(2.*np.pi)
@@ -209,14 +226,14 @@ def d2c(dl, ell_start=2.):
     
     Parameters
     ----------
-    dl: 1d-array
-        (Reduced) Power spectrum
-    ell_start:float (default = 2.)
-        The multi-pole ell value of first index of the `dl`.
+        dl: 1d-array
+            (Reduced) Power spectrum
+        ell_start:float (default = 2.)
+            The multi-pole ell value of first index of the `dl`.
         
     Return
     ------
-    cl: 1d-array
+        cl: 1d-array
     """
     ell = np.arange(ell_start, len(dl)+ell_start)
     return dl*(2.*np.pi)/(ell*(ell+1.))
@@ -226,11 +243,11 @@ def read_fiducial_cl(r=0):
     
     Parameter
     ---------
-    r: int
+        r: int
     
     Return
     ------
-    cl: 2d-arrays
+        cl: 2d-arrays
     """
     datautils_dir = Path(lbs.__file__).parent / "datautils"
     if int(r) == 0:
@@ -246,27 +263,27 @@ def forecast(lmax, cl_sys, rmin=1e-8, rmax=1e-1, rresol=1e5, iter=0, verbose=Fal
     
     Usage and detail of the function
     --------------------------------
-    The argument `rmin` and `rmax` represent a range for a first r survery. `rresol` is the resulution of the grid of r within the range.
-    If the argument `iter` does not equal 0, the estimation is continued around the r which is estimated on a previous survey. 
-    You can see the survey log with `verbose` makes True.
-    If the argument `test=True` we can verify the correctness of this function. The estimation result should be same with the value we set as `bias`.
+        The argument `rmin` and `rmax` represent a range for a first r survery. `rresol` is the resulution of the grid of r within the range.
+        If the argument `iter` does not equal 0, the estimation is continued around the r which is estimated on a previous survey. 
+        You can see the survey log with `verbose` makes True.
+        If the argument `test=True` we can verify the correctness of this function. The estimation result should be same with the value we set as `bias`.
 
     
     Parameters
     ----------
-    lmax   : int
-    cl_sys : 1d-array
-    rmin   : float
-    rmax   : float
-    rresol : float
-    iter   : int
-    verbose: bool
-    test   : bool
-    bias   : float
+        lmax   : int
+        cl_sys : 1d-array
+        rmin   : float
+        rmax   : float
+        rresol : float
+        iter   : int
+        verbose: bool
+        test   : bool
+        bias   : float
     
     Return
     ------
-    data: Dict
+        data: Dict
     """
     rresol = int(rresol)
     gridOfr = np.linspace(rmin, rmax, num=rresol)
