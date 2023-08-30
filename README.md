@@ -21,6 +21,8 @@ $ (lbs_env)$ pip install -e .
     - This function genarates a table which is used for FGBuster by using the litebird_sim imo. 
 - `c2d(cl, ell_start=2.)`
     - Convert $C_\ell$ to $D_\ell$.
+- `d2c(dl, ell_start=2.)`
+    - Convert $D_\ell$ to $C_\ell$.
 - `get_planck_cmap()`
     - Generate planck color scheme.
         ```
