@@ -27,11 +27,11 @@ $ (lbs_env)$ pip install -e .
     - Generate planck color scheme.
         ```
         # Usage
-        import lbsim_tools as lt
+        import lbsim_tools as lbt
         import healpy as hp
         import numpy as np
         m    = np.arange(hp.nside2npix(32))
-        cmap = lt.get_planck_cmap()
+        cmap = lbt.get_planck_cmap()
         hp.mollview(m, cmap=cmap)
         ```
 - `read_fiducial_cl(r)`
