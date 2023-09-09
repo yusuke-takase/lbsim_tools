@@ -98,7 +98,6 @@ def on_plot_click(event):
                 #print("NumOfdets: ", len(selected_detector_list))
 
 def ask_yes_or_no():
-    print("Do you want to make a detector list file? [y/n]")
     while True:
         ans = input(">>> ").lower()
         if ans == 'y':
@@ -127,11 +126,14 @@ print("The availavle channels are: ", channel_list)
 print("Input the channel name: ")
 channel       = input(">>> ")
 
-print("Do you make a detector list file? [y/n]")
+print("Do you want to make a detector list file? [y/n]")
 ans           = ask_yes_or_no()
 if ans == "y":
     print("Specify the directory to save: ")
     base_path = input(">>> ")
+    if base_path == "":
+        base_path = "./"
+        print("The file will be saved in the current directory.")
     if base_path.endswith('/'):
         base_path = base_path[:-1]
 
