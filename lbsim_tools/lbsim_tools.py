@@ -17,6 +17,7 @@ def get_fgbuster_instrument_from_imo(imo_version="v1.3"):
     depth_p        = [] 
     fwhm           = []
     telescope_list = []
+    bandwidth = []
     
     for i in telescopes:
         inst_info = sim.imo.query("/releases/"+imo_version+"/satellite/"+i+"/instrument_info")
@@ -36,10 +37,12 @@ def get_fgbuster_instrument_from_imo(imo_version="v1.3"):
         depth_p.append(chinfo.pol_sensitivity_channel_ukarcmin)
         fwhm.append(chinfo.fwhm_arcmin)
         telescope_list.append(telescope)
+        bandwidth.append(chinfo.bandwidth_ghz)
         
     instrument = pd.DataFrame(data = {
         'channel'    : channel_list,
         'frequency'  : freq,
+        'bandwidth'  : bandwidth,
         'depth_p'    : depth_p,
         'fwhm'       : fwhm,
         'f_sky'      : [1.0                  for i in range(len(channel_list))],
