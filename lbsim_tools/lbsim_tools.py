@@ -1,4 +1,4 @@
-import os 
+import os
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -13,17 +13,17 @@ def get_fgbuster_instrument_from_imo(imo_version="v1.3"):
     sim = lbs.Simulation(random_seed=None)
     telescopes     = ["LFT", "MFT", "HFT"]
     channel_list   = []
-    freq           = [] 
-    depth_p        = [] 
+    freq           = []
+    depth_p        = []
     fwhm           = []
     telescope_list = []
     bandwidth = []
-    
+
     for i in telescopes:
         inst_info = sim.imo.query("/releases/"+imo_version+"/satellite/"+i+"/instrument_info")
         channel_list.append(inst_info.metadata["channel_names"])
     channel_list = [item for sublist in channel_list for item in sublist]
-    
+
     for i in channel_list:
         if i[0]   == "L":
             telescope = "LFT"
@@ -38,7 +38,7 @@ def get_fgbuster_instrument_from_imo(imo_version="v1.3"):
         fwhm.append(chinfo.fwhm_arcmin)
         telescope_list.append(telescope)
         bandwidth.append(chinfo.bandwidth_ghz)
-        
+
     instrument = pd.DataFrame(data = {
         'channel'    : channel_list,
         'frequency'  : freq,
@@ -96,7 +96,7 @@ def deconvolution_cutoff(maps, fwhm, cut_off=191):
                     idx = hp.Alm.getidx(lmax, l, m)
                     for stokes in range(3):
                         alm_deconv[stokes, idx] = alm[stokes,idx]/bl[l,stokes]
-                else: 
+                else:
                     for stokes in range(3):
                         alm_deconv[stokes, idx] = 0.0
     else:
@@ -106,7 +106,7 @@ def deconvolution_cutoff(maps, fwhm, cut_off=191):
             idx1 = hp.Alm.getidx(lmax, m, m)
             idx2 = hp.Alm.getidx(lmax, lmax, m)
             alm_deconv[idx1:idx2+1] = alm[idx1:idx2+1] / bl[m:lmax+1]
-        
+
     return hp.alm2map(alm_deconv, nside)
 
 
@@ -128,9 +128,9 @@ def truncate_alm(alm, nside_in, nside_out):
 def deconvolution(maps, fwhm, nside=64):
     """ This function deeconvolves the input maps using a Gaussian beam which has Full Width Half Maximum (FWHM).
 
-    Dividing alm by the transfer function of the beam i.e. deconvolution is 
-    done up to lmax, which is determined by the specified nside as an argument. 
-    After deconvolution, the zero-filled alm is truncated to the size of 
+    Dividing alm by the transfer function of the beam i.e. deconvolution is
+    done up to lmax, which is determined by the specified nside as an argument.
+    After deconvolution, the zero-filled alm is truncated to the size of
     the specified nside and converted to a map.
 
     Parameters:
@@ -139,7 +139,7 @@ def deconvolution(maps, fwhm, nside=64):
                                  it's assumed to be a set of polarized maps for each Stokes parameter.
                                  Otherwise, it's assumed to be an temperature map.
         fwhm  (float)          : Full Width at Half Maximum (FWHM) value of the Gaussian beam in radians.
-        nside (int)            : The nside of the output map. 
+        nside (int)            : The nside of the output map.
 
     Returns:
     --------
@@ -165,7 +165,7 @@ def deconvolution(maps, fwhm, nside=64):
                     idx = hp.Alm.getidx(lmax, l, m)
                     for stokes in range(3):
                         alm_deconv[stokes, idx] = alm[stokes,idx]/bl[l,stokes]
-                else: 
+                else:
                     for stokes in range(3):
                         alm_deconv[stokes, idx] = 0.0
     else:
@@ -180,21 +180,21 @@ def deconvolution(maps, fwhm, nside=64):
 
 def almspace_ud_grade(maps, nside):
     """ This function provides up/down grade for given map. (up grade is not recommended)
-    
+
     Parameters
     ----------
         maps  (array-like) : Input maps to be deconvolved. If maps.shape is (3, npix),
                              it's assumed to be a set of polarized maps for each Stokes parameter.
                              Otherwise, it's assumed to be an temperature map.
         nside (int)        : The nside of output map.
-    
+
     Return
     ------
         Healpix-map: (array-like)
     """
     nside_in = hp.get_nside(maps)
     alm      = hp.map2alm(maps, use_pixel_weights=True)
-    alm      = truncate_alm(alm, nside_in, nside) 
+    alm      = truncate_alm(alm, nside_in, nside)
     return hp.alm2map(alm, nside)
 
 def get_planck_cmap():
@@ -209,14 +209,14 @@ def get_planck_cmap():
 
 def c2d(cl, ell_start=2.):
     """ The function to convert C_ell to D_ell
-    
+
     Parameters
     ----------
         cl: 1d-array
             Power spectrum
         ell_start:float (default = 2.)
             The multi-pole ell value of first index of the `cl`.
-        
+
     Return
     ------
         dl: 1d-array
@@ -226,14 +226,14 @@ def c2d(cl, ell_start=2.):
 
 def d2c(dl, ell_start=2.):
     """ The function to convert D_ell to C_ell
-    
+
     Parameters
     ----------
         dl: 1d-array
             (Reduced) Power spectrum
         ell_start:float (default = 2.)
             The multi-pole ell value of first index of the `dl`.
-        
+
     Return
     ------
         cl: 1d-array
@@ -241,37 +241,36 @@ def d2c(dl, ell_start=2.):
     ell = np.arange(ell_start, len(dl)+ell_start)
     return dl*(2.*np.pi)/(ell*(ell+1.))
 
-def read_fiducial_cl(r=0):
-    """ This function reads the power spectrum of the CMB used in the map base simulation of litebird_sim. 
-    
+def read_fiducial_cl(r):
+    """ This function reads the power spectrum of the CMB used in the map base simulation of litebird_sim.
+
     Parameter
     ---------
         r: int
-    
+
     Return
     ------
         cl: 2d-arrays
     """
     datautils_dir = Path(lbs.__file__).parent / "datautils"
-    if int(r) == 0:
-        cl            = hp.read_cl(datautils_dir / "Cls_Planck2018_for_PTEP_2020_r0.fits")
-    if int(r) == 1:
-        cl            = hp.read_cl(datautils_dir / "Cls_Planck2018_for_PTEP_2020_tensor_r1.fits")
-    return cl
+    cl_cmb_scalar = hp.read_cl(datautils_dir / "Cls_Planck2018_for_PTEP_2020_r0.fits")
+    cl_cmb_tensor = hp.read_cl(datautils_dir / "Cls_Planck2018_for_PTEP_2020_tensor_r1.fits") * r
+    cl_cmb = cl_cmb_scalar + cl_cmb_tensor
+    return cl_cmb
 
 def forecast(lmax, cl_sys, rmin=1e-8, rmax=1e-1, rresol=1e5, iter=0, verbose=False, test=False, bias=1e-5):
     """ The function to estimate the bias of tensor-to-scalar ratio.
     This function based on the PTEP paper: https://academic.oup.com/ptep/article/2023/4/042F01/6835420
     P88, Sec. (5.3.2)
-    
+
     Usage and detail of the function
     --------------------------------
         The argument `rmin` and `rmax` represent a range for a first r survery. `rresol` is the resulution of the grid of r within the range.
-        If the argument `iter` does not equal 0, the estimation is continued around the r which is estimated on a previous survey. 
+        If the argument `iter` does not equal 0, the estimation is continued around the r which is estimated on a previous survey.
         You can see the survey log with `verbose` makes True.
         If the argument `test=True` we can verify the correctness of this function. The estimation result should be same with the value we set as `bias`.
 
-    
+
     Parameters
     ----------
         lmax   : int
@@ -283,7 +282,7 @@ def forecast(lmax, cl_sys, rmin=1e-8, rmax=1e-1, rresol=1e5, iter=0, verbose=Fal
         verbose: bool
         test   : bool
         bias   : float
-    
+
     Return
     ------
         data: Dict
@@ -294,17 +293,17 @@ def forecast(lmax, cl_sys, rmin=1e-8, rmax=1e-1, rresol=1e5, iter=0, verbose=Fal
     #datautils_dir = Path(lbs.__file__).parent / "datautils"
     cl_r0 = read_fiducial_cl(r=0)
     cl_r1 = read_fiducial_cl(r=1)
-    
+
     # Note that the dat file has a power spectrum value from ell = 2 to ~4000.
     # In order to keep the formalism, we insert zeros at ell=1,2 of power spectrum.
     cl_lens = cl_r0[2,:]
-    cl_tens = cl_r1[2,:] 
-    
+    cl_tens = cl_r1[2,:]
+
     if test == True:
         print("The test option is True...")
         # cl_sys is replaced to cl_tens which is maltiplyed `bias`
         cl_sys[0:lmax+1] = cl_tens[0:lmax+1] * bias
-        
+
     ell = np.arange(2, lmax+1)
     Nell = len(ell)
     delta_r = 0.
@@ -314,35 +313,35 @@ def forecast(lmax, cl_sys, rmin=1e-8, rmax=1e-1, rresol=1e5, iter=0, verbose=Fal
     for j in range(iter + 1):
         Nr = len(gridOfr)
         likelihood = np.zeros(Nr)
-        
+
         for i, grid_val in enumerate(gridOfr):
             Cl_hat = cl_sys[ell] + cl_lens[ell]
             Cl = grid_val * cl_tens[ell] + cl_lens[ell]
             likelihood[i] = np.sum((-0.5) * (2.*ell + 1.) * ((Cl_hat / Cl) + np.log(Cl) - ((2.*ell - 1.) / (2.*ell + 1.)) * np.log(Cl_hat)))
-        
+
         likelihood = np.exp(likelihood - np.max(likelihood))
         maxid = np.argmax(likelihood)
         delta_r = gridOfr[maxid]
         survey_range = [delta_r - delta_r*(0.5/(j+1.)), delta_r + delta_r*(0.5/(j+1.))]
         gridOfr_old = gridOfr
         gridOfr = np.linspace(survey_range[0], survey_range[1], num=int(1e4))
-        
+
         if verbose == True:
             print("*--------------------------- iter =", j, "---------------------------*")
             print("Δr                :", delta_r)
             print("Next survey range :", survey_range)
-    
+
     # Calcurate the likelihood function again in the range that is delta_r*1e-3 < delta_r < delta_r*3.
-    # Note that the delta_r has already been estimated, this likelihood is used for display. 
+    # Note that the delta_r has already been estimated, this likelihood is used for display.
     grid_of_r_for_likelihood = np.linspace(delta_r*1e-3, delta_r*3., num=int(1e4))
     Nr = len(grid_of_r_for_likelihood)
     likelihood = np.zeros(Nr)
-    
+
     for i, grid_val in enumerate(grid_of_r_for_likelihood):
         Cl_hat = cl_sys[ell] + cl_lens[ell]
         Cl = grid_val * cl_tens[ell] + cl_lens[ell]
         likelihood[i] = np.sum((-0.5) * (2.*ell + 1.) * ((Cl_hat / Cl) + np.log(Cl) - ((2.*ell - 1.) / (2.*ell + 1.)) * np.log(Cl_hat)))
-    
+
     likelihood = np.exp(likelihood - np.max(likelihood))
     data = {"delta_r":delta_r, "grid_r":grid_of_r_for_likelihood, "likelihood":likelihood}
     return data
