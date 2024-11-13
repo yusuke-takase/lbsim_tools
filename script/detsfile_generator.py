@@ -7,7 +7,7 @@ import os
 import astropy.units as u
 
 def get_det_xy(det_info):
-    q = det_info.quat
+    q = det_info.quat.quats[0]
     r = np.array([0., 0., 1., 0.])
     if telescope == "LFT":
         # Rotate the FPU 180 degrees for projection if LFT is selected
@@ -113,9 +113,9 @@ def ask_yes_or_no():
 
 
 #---------------------- Main function ----------------------------#
-imo         = lbs.Imo()
-sim         = lbs.Simulation(random_seed=None)
-imo_version = "v1.3"
+imo         = lbs.Imo(flatfile_location="/Users/yusuke/litebird/litebird_imo/IMO/schema.json")
+sim         = lbs.Simulation(random_seed=None, imo=imo)
+imo_version = "v2"
 
 print("Input telescope name (LFT, MFT or HFT): ")
 telescope     = input(">>> ")

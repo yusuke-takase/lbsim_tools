@@ -6,7 +6,7 @@ import litebird_sim as lbs
 import healpy as hp
 from matplotlib.colors import ListedColormap
 
-def get_fgbuster_instrument_from_imo(imo_version="v1.3"):
+def get_fgbuster_instrument_from_imo(imo_version="v2"):
     """
     This function generates DataFrame which is used for FGBuster as `instrument` from IMo.
     """
